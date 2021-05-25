@@ -7,14 +7,6 @@ function createWebToken(login, mail) {
 	return jwt.sign({ login, mail }, "SECRET", { expiresIn: "24h" });
 }
 
-function middleWare(req,res,next){
-	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.setHeader("Access-Control-Allow-Credentials", "true");
-	res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-	res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-	next();
-}
-
 function registration(req, res) {
 	const login = req.body.login;
 	let password = req.body.password;
@@ -23,6 +15,13 @@ function registration(req, res) {
 	const username = req.body.name;
 	const fathername = req.body.middleName;
 	const lastname = req.body.lastName;
+
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Credentials", "true");
+	res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+	res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+
+
 	conn.query("SELECT * FROM `users` WHERE `login` = '" + login + "'", (err, value, field) => {
 		conn.query("SELECT * FROM `users` WHERE `mail` = '" + mail + "'", (err, val, field) => {
 			//if(password.length === undefined){
@@ -45,8 +44,8 @@ function registration(req, res) {
 }
 
 function login(req, res) {
-	const login = req.body.login;
-	const password = req.body.password;
+	login = req.body.login;
+	password = req.body.password;
 	conn.query("SELECT * FROM `users` WHERE `login` = '" + login + "'", (err, value, field) => {
 		if (value.length == 0) {
 			res.json("Неверный логин или пароль!");
@@ -71,5 +70,5 @@ function func (req,res){
 }
 
 module.exports = {
-    registration,login, func, middleWare
+    registration,login, func
 };
