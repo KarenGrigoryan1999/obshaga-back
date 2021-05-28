@@ -14,6 +14,7 @@ app.post("/registration", controllers.registration)
 app.post("/login", controllers.login)
 
 app.get("/get", controllers.func)
+app.get("/getPostLikes", controllers.getPostLikes)
 app.post("/getPosts",controllers.getPost);
 app.post("/setPosts",controllers.setPost);
 

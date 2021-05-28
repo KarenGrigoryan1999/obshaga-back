@@ -94,6 +94,24 @@ function getPost(req,res) {
 	}
 }
 
+function getPostLikes(req,res) {
+	try{
+		const token = req.headers.authorization.split(" ")[1];
+		const user = jwt.verify(token,"SECRET");
+		conn.query("SELECT * FROM `likes` WHERE `post_id` = '" + req.query.postId + "'", (err, value, field) => {
+			conn.query("SELECT * FROM `likes` WHERE `user_id` = '" + token + "'", (err, val, field) => {
+				if(val.length == 0){
+					res.json({count:value.length,isLiked:true});
+				}else{
+					res.json({count:value.length,isLiked:false});
+				}
+			})
+		})
+	}catch(e){
+		res.json("Нет токена!");
+	}
+}
+
 module.exports = {
-    registration,login, func, middleWare, getPost, setPost
+    registration,login, func, middleWare, getPost, setPost, getPostLikes
 };
