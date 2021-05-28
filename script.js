@@ -1,9 +1,10 @@
 const express = require('express');
 const bodyParser = require("body-parser");
-const cors = require('cors');
 const controllers = require("./Controllers/MainController")
 
 const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -13,22 +14,24 @@ app.post("/registration", controllers.registration)
 app.post("/login", controllers.login)
 
 app.get("/get", controllers.func)
+app.post("/getPosts",controllers.getPost);
+app.post("/setPosts",controllers.setPost);
 
-app.listen(4001);
+io.on('connection',(socket)=>{
+	io.on('diconnect',(data)=>{
 
-
-
-/*app.get("/", function(req,res){
-	res.send("HELLO!");
+	})
 })
-app.get("/send", function(req,res){
-	let from = req.query.from;
-	let to = req.query.to;
-	let message = req.query.message;
-	conn.query("INSERT INTO `messages` (`from`, `to`, `message`) VALUES ('"+from+"', '"+to+"', '"+message+"')",(err,value)=>{
-		res.send("Done");
-	});	
+
+io.on('send mess',function (data) {
+	
 })
+
+app.listen(4000);
+
+
+
+/*
 app.get("/get", function(req,res){
 	conn.query("SELECT * FROM `messages` WHERE `to` = '"+req.query.to+"'",(err,value,field)=>{
 		texts = [];
