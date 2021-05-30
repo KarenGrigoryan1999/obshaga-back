@@ -18,6 +18,7 @@ app.post("/getPostLikes", controllers.getPostLikes)
 app.get("/getPosts",controllers.getPosts);
 app.post("/addPost",controllers.addPost);
 app.post("/tapLikeButton",controllers.tapLikeButton);
+app.post("/getFilteredPosts",controllers.getFilteredPosts);
 
 io.on('connection',(socket)=>{
 	io.on('diconnect',(data)=>{

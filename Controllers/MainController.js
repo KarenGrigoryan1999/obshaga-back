@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const {conn} = require("../Models/MainModel");
 const userModel = require("../Models/MainModel");
+const { json } = require('body-parser');
 
 
 
@@ -19,6 +20,7 @@ function registration(req, res) {
 	const fathername = req.body.middleName;
 	const lastname = req.body.lastName;
 	const dormNum = req.body.dorm;
+
 	conn.query("SELECT * FROM `users` WHERE `login` = '" + login + "'", (err, value, field) => {
 		conn.query("SELECT * FROM `users` WHERE `mail` = '" + mail + "'", (err, val, field) => {
 			if(password === undefined){
@@ -41,34 +43,6 @@ function registration(req, res) {
 	})
 }
 
-/*function registration(req, res) {
-	const login = req.body.login;
-	let password = req.body.password;
-	const mail = req.body.email;
-	const room = 0;
-	const username = req.body.name;
-	const fathername = req.body.middleName;
-	const lastname = req.body.lastName;
-	const dormNum = req.body.dorm;
-	const isOne = userModel.hasOne(login);
-	const mailCheck = userModel.mailCheck(mail);
-	if (isOne) {
-		res.status(401).json("Такой аккаунт уже есть!");
-		return;
-	}
-	if(mailCheck){
-		res.status(401).json("Майл занят!");
-		return;
-	}
-			if(password === undefined){
-				res.json("Ощибка!");
-				return;
-			}
-	password = bcrypt.hashSync(password, 10);
-	conn.query(`INSERT INTO users (login, mail, password, room, name,lastname,fathername, dorm) VALUES ('${login}', '${mail}', '${password}','${room}','${username}','${lastname}','${fathername}','${dormNum}')`, (err, value) => {
-		res.json({accessToken:createWebToken(login, password),name:username,lastName:lastname,middleName:fathername,dorm:dormNum});
-	});
-}*/
 
 function login(req, res) {
 	login = req.body.login;
@@ -86,31 +60,13 @@ function login(req, res) {
 	})
 }
 
-/*function login(req, res) {
-	login = req.body.login;
-	password = req.body.password;
-	const isOne = userModel.hasOne(login);
-	console.log(isOne);
-	if (!isOne) {
-		res.status(404).json("Пользователь не найден!");
-		return;
-	}
-	console.log(isOne+" "+password);
-	if (bcrypt.compareSync(password, isOne)) {
-		res.json({accessToken:createWebToken(login, password),name:value[0].name,lastName:value[0].lastname,middleName:value[0].fathername,dorm:value[0].dorm});
-	} else {
-		res.status(401).json("Неверный пароль!");
-	}
-}*/
 
 function addPost(req,res) {
-	const author = req.body.author;
+	let author = req.body.author;
 	let isAnon = req.body.isAnon;
 	let forAll = req.body.forAll;
 	const message = req.body.message;
 	const dorm = req.body.dorm;
-	isAnon = true;
-	forAll = true;
 	if(isAnon) isAnon = 1; else isAnon = 0;
 	if(forAll) forAll = 1; else forAll = 0;
 
@@ -133,7 +89,8 @@ function addPost(req,res) {
 			res.json("Не заполнено одно из полей");
 		}else{
 			conn.query(`INSERT INTO posts (author, isAnon, forAll, message, dorm, date) VALUES ('${author}', '${isAnon}', '${forAll}','${message}','${dorm}','${currentDate}')`, (err, value) => {
-				res.json("Пост добавлен!");
+				//res.json("Пост добавлен!");
+				res.json({forAll:(forAll==1)?true:false});
 			});
 		}
 	}catch(e){
@@ -142,18 +99,11 @@ function addPost(req,res) {
 }
 
 function getPosts(req,res) {
-	//const dorm = req.query.dorm;
+
 	try{
 		const token = req.headers.authorization.split(" ")[1];
 		const user = jwt.verify(token,"SECRET");
-		//let filter = dorm.join(" OR `dorm` =");
-		/*if(dorm.length == 0){
-			res.json("empty");
-			return;
-		}*/
-		//conn.query("SELECT * FROM `posts` WHERE `dorm` = "+filter, (err, value, field) => {
-			//res.json(value);
-		//})
+
 		conn.query("SELECT * FROM `posts`", (err, value, field) => {
 			let arr = value.reverse();
 			arr.map(function(currentEl,index){
@@ -166,6 +116,46 @@ function getPosts(req,res) {
 						}
 					})
 					if(index == arr.length-1) res.json(arr);
+				})
+			})
+		})
+	}catch(e){
+		console.log(e);
+		res.json("Нет токена!");
+	}
+}
+function getFilteredPosts(req,res) {
+	const dorms = req.body.dorms;
+	let dorm = [];
+	for (var key in dorms) {
+		if(dorms[key] == true){
+			dorm.push(parseInt(key));
+		}
+	  }
+	try{
+		const token = req.headers.authorization.split(" ")[1];
+		const user = jwt.verify(token,"SECRET");
+		if(dorm.length == 0){
+			dorm = [1,2,3,4,5,6,7];
+		}
+		let filter = dorm.join(" OR `dorm` =");
+		console.log(filter);
+		conn.query("SELECT * FROM `posts` WHERE `dorm` = "+filter, (err, value, field) => {
+			if(value.length == 0){
+				res.json({});
+				return;
+			}
+			let arr = value.reverse();
+			arr.map(function(currentEl,index){
+				conn.query("SELECT * FROM `likes` WHERE `post_id` = '" + currentEl.id + "'", (err, v, field) => {
+					arr[index].count = v.length;
+					arr[index].isLiked = false;
+					v.map((currentLike,i)=>{
+						if(currentLike.user_id == token){
+							arr[index].isLiked = true;
+						}
+					})
+					if(index == arr.length-1){ res.json(arr);}
 				})
 			})
 		})
@@ -225,5 +215,6 @@ module.exports = {
 	getPosts, 
 	addPost, 
 	getPostLikes,
-	tapLikeButton
+	tapLikeButton,
+	getFilteredPosts
 };

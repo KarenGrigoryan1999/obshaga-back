@@ -15,7 +15,7 @@ conn.connect((err) => {
 
 function hasOne(login){
 	conn.query("SELECT * FROM `users` WHERE `login` = '" + login + "'", (err, value, field) => {
-		if(value.length === 1){ 
+		if(value.length == 1){ 
 			ans = value[0]['password'];
 		}
 	})
